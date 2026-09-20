@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="625 little squares. Endless possibilities. Create your own pixel art and leave your mark on the Pixel Wall.">
+  <title>Pixel Wall — Leave your mark.</title>
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m14 3 7 7-10 11H6l-4-4L14 3Zm-8 9 7 7M11 21h11"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M8 4 3 9l5 5M3 9h10a7 7 0 0 1 0 14" transform="translate(1 -2)"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 2 5 5-5 5m5-5H10a7 7 0 0 0 0 14"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="m12 20-8-8a5 5 0 0 1 8-6 5 5 0 0 1 8 6Z"/></symbol>
+  </svg>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Pixel Wall home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span>Pixel Wall<span class="brand-period">.</span></span>
+    </a>
+    <span class="header-note"><span class="status-dot"></span>A canvas for our campus</span>
+  </header>
+
+  <main>
+    <section id="create-screen" aria-labelledby="page-title">
+      <div class="intro">
+        <div class="eyebrow">A LITTLE COLOR. A LITTLE YOU.</div>
+        <h1 id="page-title">Make your mark<span class="accent-period">.</span></h1>
+        <p>Create something. Leave your mark.</p>
+      </div>
+
+      <div class="studio-layout">
+        <div class="studio">
+          <div class="canvas-heading"><span><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>Your canvas</span><span class="grid-size">25 × 25 <span class="dot-separator">·</span> 625 possibilities</span></div>
+          <div class="canvas-frame"><canvas id="pixel-canvas" width="750" height="750" tabindex="0" aria-label="Pixel art canvas, 25 by 25. Tap or drag to paint. Use arrow keys to move and Space to paint." aria-describedby="canvas-hint"></canvas></div>
+          <div class="canvas-caption"><span id="canvas-hint">Tap or drag to paint. See where it takes you.</span><span id="pixel-count">0 / 625</span></div>
+
+          <section class="palette-section" aria-label="Color palette">
+            <div class="palette-heading"><h2>Pick your color</h2><span class="selected-color"><span id="selected-dot"></span><span id="selected-name">Purple</span></span></div>
+            <div id="palette" class="palette" role="group" aria-label="Paint colors"></div>
+          </section>
+
+          <div class="tools" role="group" aria-label="Drawing tools">
+            <button id="eraser" class="tool-button" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-eraser"/></svg><span>Eraser</span></button>
+            <button id="undo" class="tool-button" type="button" title="Undo (Ctrl or Command + Z)" disabled><svg class="icon" aria-hidden="true"><use href="#i-undo"/></svg><span>Undo</span></button>
+            <button id="redo" class="tool-button" type="button" title="Redo (Ctrl or Command + Shift + Z)" disabled><svg class="icon" aria-hidden="true"><use href="#i-redo"/></svg><span>Redo</span></button>
+            <button id="clear" class="tool-button clear-button" type="button" disabled><svg class="icon" aria-hidden="true"><use href="#i-clear"/></svg><span>Clear grid</span></button>
+          </div>
+
+          <p id="editor-message" class="inline-message" role="status" hidden></p>
+          <button id="open-submit" class="primary-button submit-button" type="button"><span>Submit Artwork</span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <div id="download-fallback" class="download-fallback" hidden>
+            <button id="download-artwork" class="text-button" type="button" disabled>Download artwork</button>
+            <p>Save your pixel data to share with the club. Downloading does not submit it.</p>
+            <p id="download-message" role="status" hidden></p>
+          </div>
+          <p class="submit-note"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>Your little masterpiece. Part of something bigger.</p>
+        </div>
+
+        <aside class="inspiration" aria-label="A little inspiration">
+          <div class="inspiration-art" aria-hidden="true">
+            <svg class="pixel-flower" viewBox="0 0 100 120"><g fill="#b7a2e9"><path d="M40 0h20v10h10v10h10v20H70v10H60v10H40V50H30V40H20V20h10V10h10Z"/></g><path fill="#8c70cd" d="M30 40h10v10h20V40h10v10H60v10H40V50H30Z"/><path fill="#f5d57a" d="M40 20h20v20H40Z"/><path fill="#a5c7a6" d="M45 60h10v60H45ZM25 80h20v10H35V80Zm30 15h10V85h10v10H65v10H55Z"/><path fill="#a5c7a6" d="M25 70h10v10H25Z"/></svg>
+            <span class="pixel-spark spark-one"></span><span class="pixel-spark spark-two"></span>
+          </div>
+          <div class="small-label">NO ART SKILLS REQUIRED</div>
+          <h2>A tiny doodle.<br>A big feeling.<br>Entirely you.</h2>
+          <p>Start with a single pixel.<br>The rest is up to you.</p>
+          <div class="inspiration-line"></div>
+          <span class="made-for">Made for a moment<br>of creativity.</span>
+        </aside>
+      </div>
+    </section>
+
+    <section id="success-screen" class="success-screen" aria-labelledby="success-title" hidden>
+      <span class="success-kicker"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>YOU’RE PART OF THE WALL</span>
+      <div class="success-art-frame"><canvas id="success-art" width="500" height="500" role="img" aria-label="Your submitted pixel artwork"></canvas></div>
+      <h1 id="success-title" tabindex="-1">Your pixel art has<br>been submitted! 🎨</h1>
+      <p>Thanks for leaving your mark.</p>
+      <button id="create-another" class="primary-button" type="button">Create Another<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      <span class="success-footnote">One campus. A whole lot of imagination.</span>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>Many pixels. One community.</span><a href="./admin.html">For organizers<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></footer>
+
+  <dialog id="submit-dialog" class="submit-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+    <button id="close-dialog" type="button" class="close-dialog" aria-label="Keep creating"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <div class="modal-preview"><canvas id="preview-art" width="250" height="250" role="img" aria-label="Preview of your pixel artwork"></canvas></div>
+    <h2 id="dialog-title">Ready for the wall?</h2>
+    <p id="dialog-description">A little piece of you, for the whole club.</p>
+    <form id="submit-form" method="post">
+      <label for="artist-name">Name / nickname <span>optional</span></label>
+      <input id="artist-name" type="text" maxlength="60" placeholder="What should we call you?" autocomplete="nickname" disabled>
+      <label for="student-id">Club / student ID <span>optional</span></label>
+      <input id="student-id" type="text" maxlength="80" placeholder="Your club or student ID" autocomplete="off" disabled>
+      <p class="privacy-note">These details are only visible to club organizers.</p>
+      <p id="submit-error" class="form-error" role="alert" hidden></p>
+      <button id="confirm-submit" class="primary-button" type="submit" disabled><span>Send to the wall</span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      <div id="dialog-download-fallback" class="download-fallback" hidden>
+        <button id="download-artwork-dialog" class="text-button" type="button">Download artwork instead</button>
+        <p>Save your pixel data and nickname to share with the club. Your student ID is not included. This does not submit your artwork.</p>
+        <p id="dialog-download-message" role="status" hidden></p>
+      </div>
+      <button id="keep-creating" class="text-button" type="button">Keep creating</button>
+    </form>
+  </dialog>
+  <noscript><p class="noscript">Please enable JavaScript to paint and submit your artwork.</p></noscript>
+</body>
+</html>

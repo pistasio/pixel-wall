@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pixel-wall-api",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-09-20",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "vars": {
+    // Origin only, without the /pixel-wall path or trailing slash. Never use '*'.
+    "ALLOWED_ORIGINS": "https://YOUR_GITHUB_USERNAME.github.io"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pixel-wall",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "triggers": { "crons": ["0 3 * * *"] }
+  // Optional email overflow is OFF by default. Only enable it after the club inbox is
+  // a verified Cloudflare destination and a routing domain is configured for the sender.
+  // Add a comma after "triggers", then add: "send_email": [{ "name": "OVERFLOW_EMAIL" }]
+  // A binding with only its name permits verified destinations only; those sends are free.
+  // Set OVERFLOW_TO and OVERFLOW_FROM with `wrangler secret put`, never in this file.
+  // Never enable paid arbitrary-recipient sending or accept a recipient from a visitor.
+  // Overflow emails contain actual grid JSON + nickname + timestamp + reference, NEVER student IDs.
+  // Set ADMIN_KEY using Cloudflare's encrypted Worker secret store:
+  // npx wrangler secret put ADMIN_KEY --config cloudflare/wrangler.jsonc
+  // Generate a fresh random secret of at least 32 characters. Never put it in this file,
+  // an .env file, GitHub Pages settings, browser code, repository variables, or git.
+  // This configuration uses free Workers + D1 features; do not enable a paid plan.
+}
