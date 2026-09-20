@@ -1,0 +1,81 @@
+name: Verify deployed Pixel Wall backend
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Verify HTTPS, access controls, and disposable grid persistence
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { createHash, randomUUID } from 'node:crypto';
+
+          const base = 'https://pixel-wall-api.itsameenahmed.workers.dev';
+          const origin = 'https://pistasio.github.io';
+          const request = (path, options = {}) => fetch(base + path, {
+            ...options, redirect: 'error', signal: AbortSignal.timeout(30_000),
+          });
+          const health = await request('/api/health', { headers: { Origin: origin } });
+          assert.equal(health.status, 200, 'HTTPS health must succeed');
+          assert.deepEqual(await health.json(), { ok: true });
+          assert.equal(health.headers.get('Access-Control-Allow-Origin'), origin);
+          console.log('DEPLOYMENT_CHECK_RESULT ' + JSON.stringify({ check: 'https-health', passed: true }));
+
+          const preflight = await request('/api/submissions', {
+            method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST',
+              'Access-Control-Request-Headers': 'content-type' },
+          });
+          assert.equal(preflight.status, 204);
+          assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), origin);
+          assert.ok(preflight.headers.get('Access-Control-Allow-Methods').split(',').map(x => x.trim()).includes('POST'));
+          assert.ok(preflight.headers.get('Access-Control-Allow-Headers').toLowerCase().includes('content-type'));
+
+          const denied = await request('/api/submissions', { headers: { Origin: origin } });
+          assert.equal(denied.status, 401, 'Organizer data must require a secret');
+          assert.equal((await denied.json()).code, 'UNAUTHORIZED');
+          const crossSite = await request('/api/health', { headers: { Origin: 'https://not-the-club.example' } });
+          assert.equal(crossSite.status, 403);
+          assert.equal(crossSite.headers.get('Access-Control-Allow-Origin'), null);
+          console.log('DEPLOYMENT_CHECK_RESULT ' + JSON.stringify({ check: 'cors-and-private-access', passed: true }));
+
+          const grid = Array.from({ length: 25 }, () => Array(25).fill('#FFFFFF'));
+          grid[0][0] = '#7760CF';
+          grid[12][12] = '#F5D57A';
+          grid[24][24] = '#A5C7A6';
+          const clientSubmissionId = randomUUID();
+          const body = JSON.stringify({ grid, clientSubmissionId, name: 'Deployment check', studentId: '' });
+          const post = () => request('/api/submissions', { method: 'POST', headers: {
+            Origin: origin, 'Content-Type': 'application/json',
+          }, body });
+          const first = await post();
+          assert.equal(first.status, 201);
+          const receipt = await first.json();
+          assert.equal(typeof receipt.id, 'string');
+          assert.equal(typeof receipt.createdAt, 'string');
+          assert.notEqual(receipt.delivery, 'email', 'The check must persist in the database');
+          console.log('DEPLOYMENT_CHECK_RESULT ' + JSON.stringify({ check: 'disposable-grid-created',
+            clientSubmissionId, serverId: receipt.id,
+            expectedGridSha256: createHash('sha256').update(JSON.stringify(grid)).digest('hex') }));
+          const second = await post();
+          assert.equal(second.status, 200);
+          const replay = await second.json();
+          assert.equal(replay.id, receipt.id);
+          assert.equal(replay.createdAt, receipt.createdAt);
+          console.log('DEPLOYMENT_CHECK_RESULT ' + JSON.stringify({ check: 'idempotent-retry', passed: true, serverId: receipt.id }));
+          NODE
