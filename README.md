@@ -4,7 +4,7 @@ A small pixel-art installation for a university club: scan a QR code, paint a 25
 
 [Open the canvas](https://pistasio.github.io/pixel-wall/) · [Organizer view](https://pistasio.github.io/pixel-wall/admin.html) · [Source](https://github.com/pistasio/pixel-wall)
 
-**Deployment status:** GitHub Pages serves the frontend. The Cloudflare backend is prepared in this repository but has not been deployed or connected. Until it is connected, painting works and submissions are explicitly unavailable. The app does not report that unsent artwork was submitted.
+**Deployment status:** GitHub Pages is connected to the live [Cloudflare API](https://pixel-wall-api.itsameenahmed.workers.dev/api/health) and private D1 database. Live checks verified saving all 625 colors, duplicate-safe retries, and protected organizer retrieval. The account uses Workers Free. Email forwarding is disabled; failed submissions offer a JSON download.
 
 ## What is included
 

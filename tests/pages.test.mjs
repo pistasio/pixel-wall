@@ -91,6 +91,30 @@ test('invalid backend settings and unsafe build destinations are rejected', asyn
   await assert.rejects(buildPages({ apiBaseUrl: '', outputDirectory: appDirectory }), /dist-pages build directory/);
 });
 
+test('deployment fingerprints invalidate cached API modules and stay stable for identical builds', async (t) => {
+  const destination = await mkdtemp(resolve(appDirectory, 'dist-pages-test-'));
+  t.after(() => rm(destination, { recursive: true, force: true }));
+  const disabled = await buildPages({ apiBaseUrl: '', outputDirectory: destination });
+  const configured = await buildPages({ apiBaseUrl: 'https://api.example.test', outputDirectory: destination });
+  assert.match(configured.version, /^[a-f0-9]{16}$/);
+  assert.notEqual(configured.version, disabled.version);
+  for (const file of ['index.html', 'admin.html']) {
+    const html = await readFile(resolve(destination, file), 'utf8');
+    const assets = [...html.matchAll(/(?:src|href)="(\.\/[^"?#]+\.(?:js|css|svg|html))([^"\s]*)"/g)];
+    assert.ok(assets.length >= 3);
+    for (const [, , query] of assets) assert.equal(query, `?v=${configured.version}`);
+  }
+  for (const file of ['app.js', 'admin.js']) {
+    const source = await readFile(resolve(destination, file), 'utf8');
+    assert.ok(source.includes(`from './api-config.js?v=${configured.version}'`));
+    if (file === 'app.js') assert.ok(source.includes(`from './drawing.js?v=${configured.version}'`));
+  }
+  const repeat = await buildPages({ apiBaseUrl: 'https://api.example.test', outputDirectory: destination });
+  assert.equal(repeat.version, configured.version);
+  const changedOrigin = await buildPages({ apiBaseUrl: 'https://different-api.example.test', outputDirectory: destination });
+  assert.notEqual(changedOrigin.version, configured.version);
+});
+
 test('organizer credentials cannot enter a browser navigation when JavaScript fails', async () => {
   const html = await readFile(resolve(appDirectory, 'public/admin.html'), 'utf8');
   const form = html.match(/<form\b[^>]*\bid="access-form"[^>]*>/)?.[0];

@@ -1,8 +1,8 @@
 # Connect Pixel Wall submissions
 
-The event URL is **https://pistasio.github.io/pixel-wall/**. GitHub Pages hosts the canvas; a separate backend stores submissions. The repository includes a Cloudflare Worker and D1 schema, but no Cloudflare resources have been deployed or connected yet.
+The event URL is **https://pistasio.github.io/pixel-wall/**. GitHub Pages is connected to **https://pixel-wall-api.itsameenahmed.workers.dev**. The `pixel-wall-api` Worker stores submissions in the existing private `pixel-wall` D1 database. Workers Free was verified during deployment. The organizer key is an encrypted Worker secret; no credential is published here. Email forwarding is disabled, and download backup is available.
 
-The steps below change your cloud account. Carry them out only after choosing to deploy there. Keep the account on **Workers Free** and do not enable a paid plan or paid email sending.
+The steps below document deployment to another account or future maintenance; the live installation is already configured. Keep the account on **Workers Free** and do not enable a paid plan or paid email sending.
 
 ## 1. Create the private backend
 

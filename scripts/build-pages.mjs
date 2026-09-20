@@ -1,4 +1,5 @@
-import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateApiOrigin } from '../public/api-config.js';
@@ -21,6 +22,15 @@ export async function buildPages({
   if (dirname(destination) !== appDirectory || !/^dist-pages(?:-[A-Za-z0-9_-]+)?$/.test(basename(destination))) {
     throw new Error('The Pages output must be a dist-pages build directory inside this app.');
   }
+  const sources = new Map();
+  const digest = createHash('sha256').update(apiOrigin).update('\0');
+  for (const file of PAGE_FILES) {
+    const content = await readFile(resolve(publicDirectory, file), 'utf8');
+    sources.set(file, content);
+    digest.update(file).update('\0').update(content).update('\0');
+  }
+  // A backend setting change must invalidate cached modules as well as HTML assets.
+  const version = digest.digest('hex').slice(0, 16);
   await rm(destination, { recursive: true, force: true });
   await mkdir(destination, { recursive: true });
 
@@ -31,22 +41,21 @@ export async function buildPages({
   ].join('; ');
   const settings = JSON.stringify({ deployment: 'pages', apiBaseUrl: apiOrigin });
   for (const file of PAGE_FILES) {
-    const source = resolve(publicDirectory, file);
     const target = resolve(destination, file);
+    let content = sources.get(file);
     if (file.endsWith('.html')) {
-      const html = await readFile(source, 'utf8');
-      await writeFile(target, html.replace(/(<meta charset="utf-8">)/, `$1\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`));
+      content = content.replace(/(<meta charset="utf-8">)/, `$1\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`)
+        .replace(/((?:src|href)="\.\/[^"?#]+\.(?:js|css|svg|html))"/g, `$1?v=${version}"`);
     } else if (file === 'api-config.js') {
-      const sourceModule = await readFile(source, 'utf8');
       const marker = /\/\* runtime-settings:start \*\/[\s\S]*?\/\* runtime-settings:end \*\//;
-      if (!marker.test(sourceModule)) throw new Error('The public API settings marker is missing.');
-      await writeFile(target, sourceModule.replace(marker, `/* runtime-settings:start */ ${settings} /* runtime-settings:end */`));
-    } else {
-      await copyFile(source, target);
+      if (!marker.test(content)) throw new Error('The public API settings marker is missing.');
+      content = content.replace(marker, `/* runtime-settings:start */ ${settings} /* runtime-settings:end */`);
     }
+    if (file.endsWith('.js')) content = content.replace(/(\bfrom\s*['"])(\.\/(?:api-config|drawing)\.js)(['"])/g, `$1$2?v=${version}$3`);
+    await writeFile(target, content);
   }
   await writeFile(resolve(destination, '.nojekyll'), '');
-  return { directory: destination, apiConfigured: Boolean(apiOrigin) };
+  return { directory: destination, apiConfigured: Boolean(apiOrigin), version };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
